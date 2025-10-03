@@ -1,0 +1,37 @@
+# Terraform + CloudStack Provider
+FROM hashicorp/terraform:1.9
+
+RUN apk add --no-cache bash curl jq
+
+# Create directories for both architectures
+RUN mkdir -p /root/.terraform.d/plugins/local/cloudstack/cloudstack/1.0.0/linux_amd64 && \
+    mkdir -p /root/.terraform.d/plugins/local/cloudstack/cloudstack/1.0.0/linux_arm64
+
+# Copy provider binaries from build directory
+COPY build/terraform-provider-cloudstack_linux_amd64 \
+    /root/.terraform.d/plugins/local/cloudstack/cloudstack/1.0.0/linux_amd64/terraform-provider-cloudstack_v1.0.0
+
+COPY build/terraform-provider-cloudstack_linux_arm64 \
+    /root/.terraform.d/plugins/local/cloudstack/cloudstack/1.0.0/linux_arm64/terraform-provider-cloudstack_v1.0.0
+
+# Make executables
+RUN chmod +x /root/.terraform.d/plugins/local/cloudstack/cloudstack/1.0.0/linux_*/terraform-provider-cloudstack_v1.0.0
+
+# Configure Terraform for local provider
+RUN echo 'provider_installation {' > /root/.terraform.d/terraformrc && \
+    echo '  filesystem_mirror {' >> /root/.terraform.d/terraformrc && \
+    echo '    path    = "/root/.terraform.d/plugins"' >> /root/.terraform.d/terraformrc && \
+    echo '    include = ["local/*/*"]' >> /root/.terraform.d/terraformrc && \
+    echo '  }' >> /root/.terraform.d/terraformrc && \
+    echo '  direct {' >> /root/.terraform.d/terraformrc && \
+    echo '    exclude = ["local/*/*"]' >> /root/.terraform.d/terraformrc && \
+    echo '  }' >> /root/.terraform.d/terraformrc && \
+    echo '}' >> /root/.terraform.d/terraformrc
+
+WORKDIR /workspace
+
+LABEL maintainer="Hakki Sagdic" \
+      version="1.0.0" \
+      description="Terraform + CloudStack Provider with hypervisor support"
+
+CMD ["version"]

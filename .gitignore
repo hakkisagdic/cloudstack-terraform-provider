@@ -31,3 +31,13 @@ website/vendor
 !command/test-fixtures/**/.terraform/
 .terraform.lock.hcl
 provider.tf
+
+# Build artifacts
+build/
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Docker test files
+terraform-provider-cloudstack_linux_*

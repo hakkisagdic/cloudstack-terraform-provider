@@ -93,6 +93,13 @@ func resourceCloudStackInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"hypervisor": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"root_disk_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -421,6 +428,11 @@ func resourceCloudStackInstanceCreate(d *schema.ResourceData, meta interface{}) 
 		p.SetClusterid(clusterid.(string))
 	}
 
+	// If a hypervisor is supplied, add it to the parameter struct
+	if hypervisor, ok := d.GetOk("hypervisor"); ok {
+		p.SetHypervisor(hypervisor.(string))
+	}
+
 	if userData, ok := d.GetOk("user_data"); ok {
 		ud, err := getUserData(userData.(string))
 		if err != nil {
@@ -538,6 +550,11 @@ func resourceCloudStackInstanceRead(d *schema.ResourceData, meta interface{}) er
 	setValueOrID(d, "template", vm.Templatename, vm.Templateid)
 	setValueOrID(d, "project", vm.Project, vm.Projectid)
 	setValueOrID(d, "zone", vm.Zonename, vm.Zoneid)
+
+	// Set hypervisor if available
+	if vm.Hypervisor != "" {
+		d.Set("hypervisor", vm.Hypervisor)
+	}
 
 	return nil
 }
